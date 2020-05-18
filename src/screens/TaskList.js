@@ -6,6 +6,7 @@ import {View, Text, ImageBackground, StyleSheet} from 'react-native'
 //#region Import de arquivos que foram criados
 import todayImage from '../../assets/imgs/today.jpg'
 import commonStyles from '../commonStyles'
+import Task from '../components/Task'
 
 //#endregion
 //#region importar datas
@@ -26,7 +27,9 @@ export default class TaskList extends Component{
                     </View>                 
                 </ImageBackground>
                 <View style={styles.taskList}>
-                    <Text>Teste</Text>
+                    <Task desc="Comprar livro" estimateAt={new Date()} doneAt={new Date()}/>                    
+                    <Task desc="Ler livro" estimateAt={new Date()} 
+                        doneAt={null}/>            
                 </View>                
             </View>
         )
