@@ -1,6 +1,6 @@
 //#region Import Node Modules
 import React, {Component} from 'react'
-import {View, Text, ImageBackground, StyleSheet} from 'react-native'
+import {View, Text, ImageBackground, StyleSheet, FlatList} from 'react-native'
 //#endregion
 
 //#region Import de arquivos que foram criados
@@ -15,6 +15,19 @@ import 'moment/locale/pt-br'
 //#endregion
 
 export default class TaskList extends Component{
+    state = {
+        tasks: [{
+            id: Math.random(),
+            desc: 'Comprar livro react native',
+            estimateAt: new Date(),
+            doneAt: new Date()
+        }, {
+            id: Math.random(),
+            desc: 'Comprar livro react native',
+            estimateAt: new Date(),
+            doneAt: null
+        }]
+    }
     render(){
         const today = moment().locale('pt-br').format('ddd, D [de] MMMM')
         return(
@@ -27,9 +40,10 @@ export default class TaskList extends Component{
                     </View>                 
                 </ImageBackground>
                 <View style={styles.taskList}>
-                    <Task desc="Comprar livro" estimateAt={new Date()} doneAt={new Date()}/>                    
-                    <Task desc="Ler livro" estimateAt={new Date()} 
-                        doneAt={null}/>            
+                    <FlatList data={this.state.tasks}
+                        keyExtractor = {item => `${item.id}`} 
+                        renderItem={ ( { item } ) => <Task {...item}/>}/>
+
                 </View>                
             </View>
         )
