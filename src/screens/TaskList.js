@@ -1,48 +1,44 @@
-//#region React
+//#region Import da aplicação
 
 import React, {Component} from 'react'
-import {View, Text, ImageBackground, StyleSheet, FlatList,
-        TouchableOpacity, Platform, Alert} from 'react-native'
+import {View,
+        Text,
+        ImageBackground,
+        StyleSheet,
+        FlatList,
+        TouchableOpacity,
+        Platform,
+        Alert
+} from 'react-native'
+import AsyncStorage from '@react-native-community/async-storage'
+import Icon from 'react-native-vector-icons/FontAwesome'
+import moment from 'moment'
+import 'moment/locale/pt-br'
 //#endregion
 
 //#region Import de arquivos que foram criados
 import todayImage from '../../assets/imgs/today.jpg'
 import commonStyles from '../commonStyles'
 import Task from '../components/Task'
-import Icon from 'react-native-vector-icons/FontAwesome'
 import AddTask from '../screens/AddTask'
 //#endregion
-//#region importar datas
-import moment from 'moment'
-import 'moment/locale/pt-br'
-//#endregion
+
+const initialState = { 
+    showDoneTasks: true,
+    showAddTask: false,
+    visibleTasks:[],
+    tasks: [ ]
+}
 
 export default class TaskList extends Component{
     state = {
-        showDoneTasks: true,
-        showAddTask: false,
-        visibleTasks:[],
-        tasks: [{
-            id: Math.random(),
-            desc: 'Comprar livro react native',
-            estimateAt: new Date(),
-            doneAt: new Date()
-        }, {
-            id: Math.random(),
-            desc: 'Comprar livro react native',
-            estimateAt: new Date(),
-            doneAt: null
-        }, {
-            id: Math.random(),
-            desc: 'Comprar livro C#',
-            estimateAt: new Date(),
-            doneAt: null
-        }
-        ]
+        ...initialState
     }
 
-    componentDidMount = () =>{
-        this.filterTasks()
+    componentDidMount = async () =>{
+        const stateString = await AsyncStorage.getItem('tasksState')
+        const state = JSON.parse(stateString) || initialState
+        this.setState(state, this.filterTasks) 
     }
 
     toggleFilter = () =>{
@@ -59,6 +55,8 @@ export default class TaskList extends Component{
         }
 
         this.setState({ visibleTasks })
+
+        AsyncStorage.setItem('tasksState', JSON.stringify(this.state))
     }
 
     toggleTask = tasksId => {
@@ -84,6 +82,11 @@ export default class TaskList extends Component{
             doneAt: null
         })
         this.setState( { tasks, showAddTask: false}, this.filterTasks )
+    }
+
+    deleteTask = id =>{
+        const tasks = this.state.tasks.filter(taks => taks.id !== id)
+        this.setState({ tasks}, this.filterTasks)
     }
 
     render(){
@@ -112,7 +115,8 @@ export default class TaskList extends Component{
                 <View style={styles.taskList}>
                     <FlatList data={this.state.visibleTasks}
                         keyExtractor = {item => `${item.id}`} 
-                        renderItem={ ( { item } ) => <Task {...item} toggleTask={this.toggleTask}/>}/>
+                        renderItem={ ( { item } ) => <Task {...item}
+                        onToggleTask={this.toggleTask} onDelete={this.deleteTask}/>}/>
                 </View>                
                 <TouchableOpacity style={styles.addButton}
                     activeOpacity = {0.7}

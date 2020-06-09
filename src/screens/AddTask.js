@@ -9,8 +9,9 @@ import {
     TouchableOpacity,
     TextInput,
     StyleSheet,
-    TouchableWithoutFeedback
+    TouchableWithoutFeedback,    
 } from 'react-native'
+import Icon from 'react-native-vector-icons/FontAwesome' 
 
 import moment, { relativeTimeThreshold } from 'moment'
 import DateTimePicker from '@react-native-community/datetimepicker'
