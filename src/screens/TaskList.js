@@ -14,6 +14,8 @@ import AsyncStorage from '@react-native-community/async-storage'
 import Icon from 'react-native-vector-icons/FontAwesome'
 import moment from 'moment'
 import 'moment/locale/pt-br'
+import axios from 'axios'
+import { server, showError } from '../common'
 //#endregion
 
 //#region Import de arquivos que foram criados
@@ -37,10 +39,21 @@ export default class TaskList extends Component{
 
     componentDidMount = async () =>{
         const stateString = await AsyncStorage.getItem('tasksState')
-        const state = JSON.parse(stateString) || initialState
-        this.setState(state, this.filterTasks) 
+        const savedState = JSON.parse(stateString) || initialState
+        this.setState({
+            showDoneTasks: savedState.showAddTask
+        }, this.filterTasks) 
+        this.loadTasks()
     }
-
+    loadTasks = async () => {
+        try {
+            const maxDate = moment().format('YYYY-MM-DD 23:59:59')
+            const res = await axios.get(`${server}/tasks?date=${maxDate}`)
+            this.setState({ tasks: res.data }, this.filterTasks)
+        } catch (e) {
+            showError(e)
+        }
+    }
     toggleFilter = () =>{
         this.setState({showDoneTasks: !this.state.showDoneTasks}, this.filterTasks)
     }
@@ -56,37 +69,46 @@ export default class TaskList extends Component{
 
         this.setState({ visibleTasks })
 
-        AsyncStorage.setItem('tasksState', JSON.stringify(this.state))
+        AsyncStorage.setItem('tasksState', JSON.stringify({
+            showAddTask: this.state.showAddTask
+        }))
     }
 
-    toggleTask = tasksId => {
-        const tasks = [...this.state.tasks]
-        tasks.forEach(tasks => {
-            if(tasks.id === tasksId){
-                tasks.doneAt = tasks.doneAt ? null : new Date()
-            }
-        })
-        this.setState({ tasks }, this.filterTasks)
+    toggleTask = async tasksId => {
+        try {
+            await axios.put(`${server}/tasks/${tasksId}/toggle`)
+            await this.loadTasks()
+        } catch (e) {
+            showError(e)
+        }
+        
     }
 
-    addTask = newTask =>{
+    addTask = async newTask =>{
         if(!newTask.desc || !newTask.desc.trim){
             Alert.alert('Dados inválidos','Descrção não informada')
             return
         }
-        const tasks = [...this.state.tasks]
-        tasks.push({
-            id: Math.random(),
-            desc: newTask.desc,
-            estimateAt: newTask.date,
-            doneAt: null
-        })
-        this.setState( { tasks, showAddTask: false}, this.filterTasks )
+
+        try {
+            await axios.post(`${server}/tasks`,{
+                desc: newTask.desc,
+                estimateAt: newTask.date
+            })
+            this.setState( { showAddTask: false }, this.loadTasks )
+        } catch (e) {
+            this.showError(e)
+        }
+
     }
 
-    deleteTask = id =>{
-        const tasks = this.state.tasks.filter(taks => taks.id !== id)
-        this.setState({ tasks}, this.filterTasks)
+    deleteTask = async tasksId =>{
+        try {
+            await axios.delete(`${server}/tasks/${tasksId}`)
+            await this.loadTasks()
+        } catch (e) {
+            showError(e)
+        }
     }
 
     render(){
